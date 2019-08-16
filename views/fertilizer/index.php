@@ -19,8 +19,14 @@ $gridColumns = [
             'formOptions' => ['action' => ['edit-fertilizer']]
         ]
     ],
-//    'name',
-    'type',
+    [
+        'class' => 'kartik\grid\EditableColumn',
+        'attribute' => 'type',
+        'editableOptions' => [
+            'asPopover' => false,
+            'formOptions' => ['action' => ['edit-fertilizer']]
+        ]
+    ],
     'n_content',
     'p_content',
     //'k_content',

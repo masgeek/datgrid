@@ -71,7 +71,8 @@ class FertilizerController extends Controller
             $pk = Yii::$app->request->post('editableKey', 0);
             $data = Yii::$app->request->post('AvailableFertilizer');
             $model = $this->findModel($pk);
-            $model->load(['AvailableFertilizer' => $data[0]]); //use only the first value in the index array
+            $topMost = array_slice($data, 0, 1, false); // get the top most array value and ignore thr keys
+            $model->load(['AvailableFertilizer' => $topMost[0]]); //use only the first value in the index array
 
             if ($model->validate()) {
                 if ($model->save()) {
@@ -143,10 +144,6 @@ class FertilizerController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
-
-            echo '<pre>';
-            echo Json::encode(Yii::$app->request->post('AvailableFertilizer'));
-            return 8;
             if ($model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
