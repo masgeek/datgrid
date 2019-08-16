@@ -2,9 +2,12 @@
 
 namespace app\controllers;
 
+use kartik\grid\EditableColumnAction;
 use Yii;
 use app\models\AvailableFertilizer;
 use yii\data\ActiveDataProvider;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -21,12 +24,65 @@ class FertilizerController extends Controller
     {
         return [
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
+                    'edit-fertilizer' => ['POST'],
                     'delete' => ['POST'],
                 ],
             ],
         ];
+    }
+
+    public function actionsOld()
+    {
+        return ArrayHelper::merge(parent::actions(), [
+            'edit-fertilizer' => [                                       // identifier for your editable column action
+                'class' => EditableColumnAction::class,     // action class name
+                'modelClass' => AvailableFertilizer::class,                // the model for the record being edited
+                'outputValue' => function ($model, $attribute, $key, $index) {
+                    /* @var $model AvailableFertilizer */
+                    return $model->price;      // return any custom output value if desired
+                },
+                'outputMessage' => function ($model, $attribute, $key, $index) {
+                    return '';                                  // any custom error to return after model save
+                },
+                'showModelErrors' => true,                        // show model validation errors after save
+                'errorOptions' => ['header' => ''],            // error summary HTML options
+                // 'postOnly' => true,
+                'ajaxOnly' => true,
+                // 'findModel' => function($id, $action) {},
+                // 'checkAccess' => function($action, $model) {}
+            ]
+        ]);
+    }
+
+    /**
+     * @return false|string
+     * @throws NotFoundHttpException
+     */
+    public function actionEditFertilizer()
+    {
+        $output = [
+            'output' => '',
+            'message' => 'Unable to save record'
+        ];
+        $hasEditable = Yii::$app->request->post('hasEditable', false);
+        if ($hasEditable) {
+            $pk = Yii::$app->request->post('editableKey', 0);
+            $data = Yii::$app->request->post('AvailableFertilizer');
+            $model = $this->findModel($pk);
+            $model->load(['AvailableFertilizer' => $data[0]]); //use only the first value in the index array
+
+            if ($model->validate()) {
+                if ($model->save()) {
+                    $output = [
+                        'output' => '',
+                        'message' => ''
+                    ];
+                }
+            }
+        }
+        return Json::encode($output);
     }
 
     /**
@@ -86,8 +142,14 @@ class FertilizerController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($model->load(Yii::$app->request->post())) {
+
+            echo '<pre>';
+            echo Json::encode(Yii::$app->request->post('AvailableFertilizer'));
+            return 8;
+            if ($model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
         }
 
         return $this->render('update', [
